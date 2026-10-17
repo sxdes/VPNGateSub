@@ -41,6 +41,9 @@ jobs:
             --limit "${{ github.event.inputs.limit || '0' }}" \
             --countries "${{ github.event.inputs.countries }}"
 
+      - name: Build grouped collection subscription
+        run: python scripts/build_collection.py
+
       - name: Validate generated files
         run: |
           python - <<'EOF'
@@ -49,6 +52,9 @@ jobs:
           assert sb["endpoints"], "no endpoints in singbox.json"
           text = pathlib.Path("output/mihomo.yaml").read_text(encoding="utf-8")
           assert "type: openvpn" in text, "no openvpn proxies in mihomo.yaml"
+          collection = pathlib.Path("output/collection.yaml").read_text(encoding="utf-8")
+          assert "name: VPNGate" in collection, "VPNGate group missing from collection.yaml"
+          assert "proxy-providers:" not in collection, "collection.yaml exposes provider wiring"
           print("validation ok:", len(sb["endpoints"]), "nodes")
           EOF
 
